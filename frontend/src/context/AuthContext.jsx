@@ -1,109 +1,117 @@
-/**
- * AuthContext
- * 
- * Global authentication context for managing user authentication state
- * This context can be used throughout the app to access user info and auth status
- * 
- * Future improvements:
- * - Add token validation
- * - Add refresh token mechanism
- * - Add logout functionality
- * - Add role-based access control
- */
+import { createContext, useState, useContext, useEffect } from 'react';
+import { authAPI } from '../services/api';
+import { toast } from 'react-toastify';
 
-import { createContext, useState, useEffect } from 'react';
-
-// Create the authentication context
 const AuthContext = createContext();
 
-/**
- * AuthProvider Component
- * Wraps the application and provides authentication state
- * 
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- * @returns {React.ReactElement} The provider component
- */
-function AuthProvider({ children }) {
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  /**
-   * Check if user is already logged in on app load
-   */
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const role = localStorage.getItem('userRole');
-    const email = localStorage.getItem('userEmail');
-
-    if (token && role) {
-      setIsAuthenticated(true);
-      setUserRole(role);
-      setUser({
-        email,
-        role,
-      });
+    if (token) {
+      loadUser();
+    } else {
+      setLoading(false);
     }
+  }, [token]);
 
-    setLoading(false);
-  }, []);
-
-  /**
-   * Login function
-   * @param {string} email - User email
-   * @param {string} password - User password
-   * @param {string} role - User role (student, security, admin)
-   * @returns {Promise} Login result
-   */
-  const login = async (email, password, role) => {
-    // TODO: Replace with actual API call
-    // const response = await api.post('/auth/login', { email, password, role });
-    // const { token, user } = response.data;
-
-    const token = 'mock-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userEmail', email);
-
-    setIsAuthenticated(true);
-    setUserRole(role);
-    setUser({ email, role });
-
-    return { success: true };
+  const loadUser = async () => {
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Load user error:', error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /**
-   * Logout function
-   */
+  const register = async (data) => {
+    try {
+      const response = await authAPI.register(data);
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setToken(token);
+      setUser(user);
+      toast.success(response.data.message);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const login = async (identifier, password) => {
+    try {
+      const response = await authAPI.login({ identifier, password });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setToken(token);
+      setUser(user);
+      toast.success('Login successful');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-
-    setIsAuthenticated(false);
-    setUserRole(null);
+    localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
+    toast.info('Logged out successfully');
   };
 
-  /**
-   * Context value object
-   */
+  const verifyEmail = async (otp) => {
+    try {
+      const response = await authAPI.verifyEmail(otp);
+      toast.success(response.data.message);
+      await loadUser();
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Verification failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const resendOTP = async () => {
+    try {
+      const response = await authAPI.resendOTP();
+      toast.success(response.data.message);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to resend OTP';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const value = {
     user,
-    isAuthenticated,
     loading,
-    userRole,
+    isAuthenticated: !!user,
+    register,
     login,
     logout,
+    verifyEmail,
+    resendOTP,
+    loadUser
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export { AuthContext, AuthProvider };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

@@ -1,135 +1,87 @@
-/**
- * Main App Component
- * 
- * This is the root component of the application.
- * It sets up:
- * - React Router for client-side routing
- * - Route configuration with protected routes
- * - Layout wrapper (MainLayout) for authenticated pages
- * - AuthProvider for global authentication state
- */
-
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import MainLayout from './layouts/MainLayout';
-
-// Import pages
-import Login from './pages/Login/Login';
-import Signup from './pages/Signup/Signup';
-import Home from './pages/Home/Home';
-import Student from './pages/Student/Student';
-import Security from './pages/Security/Security';
-import Admin from './pages/Admin/Admin';
-
-// Import styles
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
-/**
- * ProtectedRoute Component
- * Wraps routes that require authentication
- * If user is not authenticated, redirects to login
- * 
- * @param {object} props - Component props
- * @param {React.ReactNode} props.children - Child component to render
- * @returns {React.ReactElement} Protected route
- */
-function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('authToken');
+import Navbar from './components/Navbar';
+import PrivateRoute from './components/PrivateRoute';
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+// Auth Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
-  return children;
-}
+// General Pages
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 
-/**
- * App Component
- * Configures all routes and layout structure
- * 
- * Route Structure:
- * - /login - Login page (no layout)
- * - /signup - Signup page (no layout)
- * - /home - Home page (with MainLayout)
- * - /student - Student dashboard (with MainLayout)
- * - /security - Security dashboard (with MainLayout)
- * - /admin - Admin dashboard (with MainLayout)
- * 
- * TODOs for future implementation:
- * - Add Profile page
- * - Add Settings page
- * - Add Lost page
- * - Add Found page
- * - Add Post page
- * - Add error pages (404, 500)
- * - Add loader/skeleton screens
- */
+// Item Pages
+import ReportLostItem from './pages/ReportLostItem';
+import ReportFoundItem from './pages/ReportFoundItem';
+import ReportPost from './pages/ReportPost';
+import LostItems from './pages/LostItems';
+import FoundItems from './pages/FoundItems';
+import MyClaims from './pages/MyClaims';
+
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+
+// Security Pages
+import SecurityPendingClaims from './pages/security/SecurityPendingClaims';
+
 function App() {
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('findora-theme') || 'light';
+    document.body.classList.remove('light-mode', 'dark-mode');
+    document.body.classList.add(`${storedTheme}-mode`);
+  }, []);
+
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes - No Layout */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+    <Router>
+      <AuthProvider>
+        <div className="app">
+          <Navbar />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
 
-          {/* Protected Routes - With MainLayout */}
-          {/* Home Page */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Home />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Auth Routes */}
+            <Route path="/verify-email" element={<PrivateRoute><VerifyEmail /></PrivateRoute>} />
 
-          {/* Student Dashboard */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Student />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
 
-          {/* Security Staff Dashboard */}
-          <Route
-            path="/security"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Security />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Item Routes */}
+            <Route path="/report-lost" element={<PrivateRoute roles={['student', 'staff']}><ReportLostItem /></PrivateRoute>} />
+            <Route path="/report-found" element={<PrivateRoute roles={['student', 'staff']}><ReportFoundItem /></PrivateRoute>} />
+            <Route path="/report-post/:itemId" element={<PrivateRoute roles={['student', 'staff']}><ReportPost /></PrivateRoute>} />
+            <Route path="/lost-items" element={<PrivateRoute roles={['student', 'staff']}><LostItems /></PrivateRoute>} />
+            <Route path="/found-items" element={<PrivateRoute roles={['student', 'staff']}><FoundItems /></PrivateRoute>} />
+            <Route path="/my-claims" element={<PrivateRoute roles={['student', 'staff']}><MyClaims /></PrivateRoute>} />
 
-          {/* Admin Dashboard */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Admin />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Security Routes */}
+            <Route path="/security/pending-claims" element={<PrivateRoute roles={['security', 'admin']}><SecurityPendingClaims /></PrivateRoute>} />
 
-          {/* Default Route - Redirect to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-
-          {/* Catch all - 404 (TODO: Create NotFound page) */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<PrivateRoute roles={['admin']}><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/users" element={<PrivateRoute roles={['admin']}><AdminUsers /></PrivateRoute>} />
+          </Routes>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 
