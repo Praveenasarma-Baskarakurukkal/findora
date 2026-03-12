@@ -37,6 +37,8 @@ const ReportLostItem = () => {
     purseItems2: '',
     purseItems3: '',
     otherPhoto: null,
+    otherItemName: '',
+    otherDescription: '',
     otherLocation1: '',
     otherLocation2: '',
     otherLocation3: '',
@@ -106,6 +108,7 @@ const ReportLostItem = () => {
     }
 
     if (category === 'Others') {
+      if (!formData.otherItemName.trim()) nextErrors.otherItemName = 'Item name is required.';
       if (!formData.otherLocation1.trim()) nextErrors.otherLocation1 = 'Field 1 is required.';
       if (!formData.otherDateLost) nextErrors.otherDateLost = 'Date is required.';
       if (!formData.otherFromTime) nextErrors.otherFromTime = 'From time is required.';
@@ -253,20 +256,6 @@ const ReportLostItem = () => {
             <div className="report-lost-section">
               <h3>Purse / Wallet</h3>
 
-              <div className="report-lost-form-group">
-                <label>Item Photo (optional)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange('pursePhoto', e.target.files?.[0])}
-                />
-              </div>
-
-              <div className="report-lost-photo-box">
-                <div className="report-lost-photo-emoji">👛</div>
-                <p>Open purse preview</p>
-              </div>
-
               <div className="report-lost-options">
                 <label>
                   <input
@@ -359,6 +348,28 @@ const ReportLostItem = () => {
           {category === 'Others' && (
             <div className="report-lost-section">
               <h3>Others</h3>
+
+              <div className="report-lost-form-group">
+                <label className="required">Item Name</label>
+                <input
+                  name="otherItemName"
+                  value={formData.otherItemName}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Black backpack, Umbrella, Keys..."
+                />
+                {errors.otherItemName && <p className="report-lost-error">{errors.otherItemName}</p>}
+              </div>
+
+              <div className="report-lost-form-group">
+                <label>Description (optional)</label>
+                <textarea
+                  name="otherDescription"
+                  value={formData.otherDescription}
+                  onChange={handleInputChange}
+                  rows={3}
+                  placeholder="Describe the item in detail (colour, size, brand, etc.)"
+                />
+              </div>
 
               <div className="report-lost-form-group">
                 <label>Item Photo (optional)</label>
