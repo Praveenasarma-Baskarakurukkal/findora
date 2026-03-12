@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { itemsAPI } from '../services/api';
 import ItemCard from '../components/ItemCard';
 import { FOUND_ITEM_SORT, sortFoundItems } from '../utils/itemDisplayUtils';

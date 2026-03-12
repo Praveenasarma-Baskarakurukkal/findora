@@ -1,14 +1,55 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { itemsAPI } from '../services/api';
+import { toast } from 'react-toastify';
 import './ReportLostItem.css';
 
 const CATEGORY_OPTIONS = ['NIC', 'Student / Staff ID', 'Bank Card', 'Purse / Wallet', 'Others'];
 
+const SRI_LANKA_BANKS = [
+  // State / Government Banks
+  'Bank of Ceylon',
+  'National Savings Bank',
+  'People\'s Bank',
+  'Pradeshiya Sanwardhana Bank (Regional Development Bank)',
+  'Sri Lanka Savings Bank',
+  'State Mortgage & Investment Bank',
+
+  // Private Licensed Commercial Banks
+  'Amana Bank',
+  'Cargills Bank',
+  'Commercial Bank of Ceylon',
+  'DFCC Bank',
+  'Hatton National Bank (HNB)',
+  'Nations Trust Bank',
+  'National Development Bank (NDB)',
+  'Pan Asia Banking Corporation (PABC)',
+  'Sampath Bank',
+  'Sanasa Development Bank',
+  'Seylan Bank',
+  'Union Bank of Colombo',
+
+  // Foreign Banks
+  'Bank of China (Sri Lanka)',
+  'Citibank (Sri Lanka)',
+  'Deutsche Bank (Sri Lanka)',
+  'Habib Bank (Sri Lanka)',
+  'HSBC Sri Lanka',
+  'Indian Bank (Sri Lanka)',
+  'Indian Overseas Bank (Sri Lanka)',
+  'MCB Bank (Sri Lanka)',
+  'Public Bank Berhad (Sri Lanka)',
+  'Standard Chartered (Sri Lanka)',
+];
+
 const ReportLostItem = () => {
+  const navigate = useNavigate();
   const [category, setCategory] = useState('');
   const [purseOption, setPurseOption] = useState('with-id');
   const [submitted, setSubmitted] = useState(false);
   const [verified, setVerified] = useState(false);
   const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nicName: '',
@@ -72,19 +113,19 @@ const ReportLostItem = () => {
     if (category === 'NIC') {
       if (!formData.nicName.trim()) nextErrors.nicName = 'Name is required.';
       if (!formData.nicNumber.trim()) nextErrors.nicNumber = 'NIC Number is required.';
+      else if (!/^\d{12}$/.test(formData.nicNumber.trim())) nextErrors.nicNumber = 'NIC Number must be exactly 12 digits.';
     }
 
     if (category === 'Student / Staff ID') {
       if (!formData.idName.trim()) nextErrors.idName = 'Name is required.';
       if (!formData.studentOrStaffId.trim()) nextErrors.studentOrStaffId = 'Student ID or Staff ID is required.';
+      else if (!/^\d{6}[A-Z]$/.test(formData.studentOrStaffId.trim())) nextErrors.studentOrStaffId = 'ID must be 6 digits followed by 1 letter (e.g. 240574S).';
     }
 
     if (category === 'Bank Card') {
       if (!formData.cardType) nextErrors.cardType = 'Card Type is required.';
       if (!formData.bankName.trim()) nextErrors.bankName = 'Name of the Bank is required.';
-      if (formData.cardLast4.trim() && !/^\d{4}$/.test(formData.cardLast4.trim())) {
-        nextErrors.cardLast4 = 'Last 4 digits must be exactly 4 numbers when provided.';
-      }
+      if (!/^\d{4}$/.test(formData.cardLast4.trim())) nextErrors.cardLast4 = 'Last 4 digits must be exactly 4 numbers.';
       if (!formData.bankLocation1.trim()) nextErrors.bankLocation1 = 'Field 1 is required.';
       if (!formData.bankDateLost) nextErrors.bankDateLost = 'Date is required.';
       if (!formData.bankFromTime) nextErrors.bankFromTime = 'From time is required.';
@@ -116,12 +157,104 @@ const ReportLostItem = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const mapCategoryToApi = (value) => {
+    switch (value) {
+      case 'NIC':
+        return 'NIC';
+      case 'Student / Staff ID':
+        return 'Student ID';
+      case 'Bank Card':
+        return 'Bank Card';
+      case 'Purse / Wallet':
+        return 'Wallet';
+      default:
+        return 'Other';
+    }
+  };
+
+  const getDefaultDate = () => new Date().toISOString().slice(0, 10);
+  const getDefaultTime = () => new Date().toTimeString().slice(0, 5);
+
+  const buildLostItemPayload = () => {
+    const apiCategory = mapCategoryToApi(category);
+    let item_name = 'Lost Item';
+    let description = '';
+    let location = 'Unknown';
+    let date = getDefaultDate();
+    let time = getDefaultTime();
+    let image = null;
+
+    if (category === 'NIC') {
+      item_name = `NIC - ${formData.nicName || 'Unknown'}`;
+      description = `NIC Number: ${formData.nicNumber}`;
+    }
+
+    if (category === 'Student / Staff ID') {
+      item_name = `Student/Staff ID - ${formData.idName || 'Unknown'}`;
+      description = `ID Number: ${formData.studentOrStaffId}`;
+    }
+
+    if (category === 'Bank Card') {
+      item_name = `${formData.bankName} ${formData.cardType} Card`;
+      description = `Last 4 digits: ${formData.cardLast4 || 'N/A'}${formData.cvv ? ` | CVV (provided): ${formData.cvv}` : ''}`;
+      location = [formData.bankLocation1, formData.bankLocation2, formData.bankLocation3].filter(Boolean).join(', ') || location;
+      date = formData.bankDateLost || date;
+      time = formData.bankFromTime || time;
+    }
+
+    if (category === 'Purse / Wallet') {
+      item_name = 'Purse / Wallet';
+      if (purseOption === 'with-id') {
+        description = `Claim with ID: ${formData.purseIdNumber}`;
+      } else {
+        description = `Items inside: ${[formData.purseItems1, formData.purseItems2, formData.purseItems3].filter(Boolean).join(', ')}`;
+        location = [formData.purseLocation1, formData.purseLocation2, formData.purseLocation3].filter(Boolean).join(', ') || location;
+        date = formData.purseDateLost || date;
+        time = formData.purseFromTime || time;
+      }
+      image = formData.pursePhoto;
+    }
+
+    if (category === 'Others') {
+      item_name = 'Other Lost Item';
+      description = 'General lost item report';
+      location = [formData.otherLocation1, formData.otherLocation2, formData.otherLocation3].filter(Boolean).join(', ') || location;
+      date = formData.otherDateLost || date;
+      time = formData.otherFromTime || time;
+      image = formData.otherPhoto;
+    }
+
+    return {
+      type: 'lost',
+      category: apiCategory,
+      item_name,
+      description,
+      location,
+      date,
+      time,
+      image
+    };
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitted(true);
-    setVerified(false);
-    setOtp('');
+
+    try {
+      setLoading(true);
+      const payload = buildLostItemPayload();
+      await itemsAPI.create(payload);
+      setSubmitted(true);
+      setVerified(false);
+      setOtp('');
+      toast.success('Lost item reported successfully');
+      setTimeout(() => navigate('/lost-items', { state: { refreshAt: Date.now() } }), 500);
+    } catch (error) {
+      console.error('Failed to create lost item:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to report lost item');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerify = () => {
@@ -157,7 +290,7 @@ const ReportLostItem = () => {
               </div>
               <div className="report-lost-form-group">
                 <label className="required">NIC Number</label>
-                <input name="nicNumber" value={formData.nicNumber} onChange={handleInputChange} />
+                <input name="nicNumber" value={formData.nicNumber} onChange={(e) => setFormData(prev => ({ ...prev, nicNumber: e.target.value.replace(/\D/g, '') }))} maxLength="12" inputMode="numeric" placeholder="e.g. 200445678123" />
                 {errors.nicNumber && <p className="report-lost-error">{errors.nicNumber}</p>}
               </div>
             </div>
@@ -173,7 +306,21 @@ const ReportLostItem = () => {
               </div>
               <div className="report-lost-form-group">
                 <label className="required">Student ID or Staff ID</label>
-                <input name="studentOrStaffId" value={formData.studentOrStaffId} onChange={handleInputChange} />
+                <input
+                  name="studentOrStaffId"
+                  value={formData.studentOrStaffId}
+                  onChange={(e) => {
+                    const raw = e.target.value.toUpperCase();
+                    let result = '';
+                    for (let i = 0; i < raw.length && i < 7; i++) {
+                      if (i < 6 && /\d/.test(raw[i])) result += raw[i];
+                      else if (i === 6 && /[A-Z]/.test(raw[i])) result += raw[i];
+                    }
+                    setFormData(prev => ({ ...prev, studentOrStaffId: result }));
+                  }}
+                  maxLength="7"
+                  placeholder="e.g. 240574S"
+                />
                 {errors.studentOrStaffId && <p className="report-lost-error">{errors.studentOrStaffId}</p>}
               </div>
             </div>
@@ -194,12 +341,26 @@ const ReportLostItem = () => {
               </div>
               <div className="report-lost-form-group">
                 <label className="required">Name of the Bank</label>
-                <input name="bankName" value={formData.bankName} onChange={handleInputChange} />
+                <select name="bankName" value={formData.bankName} onChange={handleInputChange}>
+                  <option value="">Select a bank</option>
+                  {SRI_LANKA_BANKS.map((bank) => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
                 {errors.bankName && <p className="report-lost-error">{errors.bankName}</p>}
               </div>
               <div className="report-lost-form-group">
-                <label>Last 4 digits of the card number (optional)</label>
-                <input name="cardLast4" value={formData.cardLast4} onChange={handleInputChange} maxLength={4} />
+                <label className="required">Card Number</label>
+                <input
+                  value={`#### #### #### ${formData.cardLast4}`}
+                  onChange={(e) => {
+                    const last4 = e.target.value.replace(/\D/g, '').slice(-4);
+                    setFormData(prev => ({ ...prev, cardLast4: last4 }));
+                  }}
+                  inputMode="numeric"
+                  placeholder="#### #### #### 1234"
+                />
+                <small>Example: #### #### #### 1234</small>
                 {errors.cardLast4 && <p className="report-lost-error">{errors.cardLast4}</p>}
               </div>
 
@@ -409,7 +570,9 @@ const ReportLostItem = () => {
           )}
 
           <div className="report-lost-actions">
-            <button type="submit" className="btn-primary">Submit</button>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Submitting...' : 'Submit'}
+            </button>
           </div>
         </form>
 

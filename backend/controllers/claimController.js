@@ -76,7 +76,8 @@ exports.createClaim = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Claim created successfully. OTP sent to your email.',
-      claimId
+      claimId,
+      otp
     });
   } catch (error) {
     console.error('Create claim error:', error);

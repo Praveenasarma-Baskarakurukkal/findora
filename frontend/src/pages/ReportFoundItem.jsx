@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -10,6 +10,37 @@ const CATEGORY_OPTIONS = [
   'Bank Card',
   'Purse',
   'Others'
+];
+
+const SRI_LANKA_BANKS = [
+  'Bank of Ceylon',
+  'National Savings Bank',
+  'People\'s Bank',
+  'Pradeshiya Sanwardhana Bank (Regional Development Bank)',
+  'Sri Lanka Savings Bank',
+  'State Mortgage & Investment Bank',
+  'Amana Bank',
+  'Cargills Bank',
+  'Commercial Bank of Ceylon',
+  'DFCC Bank',
+  'Hatton National Bank (HNB)',
+  'Nations Trust Bank',
+  'National Development Bank (NDB)',
+  'Pan Asia Banking Corporation (PABC)',
+  'Sampath Bank',
+  'Sanasa Development Bank',
+  'Seylan Bank',
+  'Union Bank of Colombo',
+  'Bank of China (Sri Lanka)',
+  'Citibank (Sri Lanka)',
+  'Deutsche Bank (Sri Lanka)',
+  'Habib Bank (Sri Lanka)',
+  'HSBC Sri Lanka',
+  'Indian Bank (Sri Lanka)',
+  'Indian Overseas Bank (Sri Lanka)',
+  'MCB Bank (Sri Lanka)',
+  'Public Bank Berhad (Sri Lanka)',
+  'Standard Chartered (Sri Lanka)',
 ];
 
 const ReportFoundItem = () => {
@@ -67,11 +98,13 @@ const ReportFoundItem = () => {
     if (category === 'NIC') {
       if (!formData.nicName.trim()) nextErrors.nicName = 'Name is required.';
       if (!formData.nicNumber.trim()) nextErrors.nicNumber = 'NIC Number is required.';
+      else if (!/^\d{12}$/.test(formData.nicNumber.trim())) nextErrors.nicNumber = 'NIC Number must be exactly 12 digits.';
     }
 
     if (category === 'Student / Staff ID') {
       if (!formData.idName.trim()) nextErrors.idName = 'Name is required.';
       if (!formData.studentOrStaffId.trim()) nextErrors.studentOrStaffId = 'Student ID or Staff ID is required.';
+      else if (!/^\d{6}[A-Z]$/.test(formData.studentOrStaffId.trim())) nextErrors.studentOrStaffId = 'ID must be 6 digits followed by 1 letter (e.g. 240574S).';
     }
 
     if (category === 'Bank Card') {
@@ -241,7 +274,14 @@ const ReportFoundItem = () => {
               </div>
               <div className="form-group">
                 <label className="required">NIC Number</label>
-                <input name="nicNumber" value={formData.nicNumber} onChange={handleInputChange} />
+                <input
+                  name="nicNumber"
+                  value={formData.nicNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nicNumber: e.target.value.replace(/\D/g, '') }))}
+                  maxLength="12"
+                  inputMode="numeric"
+                  placeholder="e.g. 200445678123"
+                />
                 {errors.nicNumber && <p className="error-text">{errors.nicNumber}</p>}
               </div>
             </div>
@@ -257,7 +297,21 @@ const ReportFoundItem = () => {
               </div>
               <div className="form-group">
                 <label className="required">Student ID or Staff ID</label>
-                <input name="studentOrStaffId" value={formData.studentOrStaffId} onChange={handleInputChange} />
+                <input
+                  name="studentOrStaffId"
+                  value={formData.studentOrStaffId}
+                  onChange={(e) => {
+                    const raw = e.target.value.toUpperCase();
+                    let result = '';
+                    for (let i = 0; i < raw.length && i < 7; i++) {
+                      if (i < 6 && /\d/.test(raw[i])) result += raw[i];
+                      else if (i === 6 && /[A-Z]/.test(raw[i])) result += raw[i];
+                    }
+                    setFormData(prev => ({ ...prev, studentOrStaffId: result }));
+                  }}
+                  maxLength="7"
+                  placeholder="e.g. 240574S"
+                />
                 {errors.studentOrStaffId && <p className="error-text">{errors.studentOrStaffId}</p>}
               </div>
             </div>
@@ -278,12 +332,26 @@ const ReportFoundItem = () => {
               </div>
               <div className="form-group">
                 <label className="required">Name of the Bank</label>
-                <input name="bankName" value={formData.bankName} onChange={handleInputChange} />
+                <select name="bankName" value={formData.bankName} onChange={handleInputChange}>
+                  <option value="">Select a bank</option>
+                  {SRI_LANKA_BANKS.map((bank) => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
                 {errors.bankName && <p className="error-text">{errors.bankName}</p>}
               </div>
               <div className="form-group">
-                <label className="required">Last 4 digits of the card number</label>
-                <input name="cardLast4" value={formData.cardLast4} onChange={handleInputChange} maxLength={4} />
+                <label className="required">Card Number</label>
+                <input
+                  value={`#### #### #### ${formData.cardLast4}`}
+                  onChange={(e) => {
+                    const last4 = e.target.value.replace(/\D/g, '').slice(-4);
+                    setFormData(prev => ({ ...prev, cardLast4: last4 }));
+                  }}
+                  inputMode="numeric"
+                  placeholder="#### #### #### 1234"
+                />
+                <small>Example: #### #### #### 1234</small>
                 {errors.cardLast4 && <p className="error-text">{errors.cardLast4}</p>}
               </div>
 
