@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -33,9 +33,15 @@ const SecurityPendingClaims = lazy(() => import('./pages/security/SecurityPendin
 
 function App() {
   useEffect(() => {
-    const storedTheme = localStorage.getItem('findora-theme') || 'light';
-    document.body.classList.remove('light-mode', 'dark-mode');
-    document.body.classList.add(`${storedTheme}-mode`);
+    try {
+      const storedTheme = localStorage.getItem('findora-theme') || 'light';
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.remove('light-mode', 'dark-mode');
+        document.body.classList.add(`${storedTheme}-mode`);
+      }
+    } catch (error) {
+      console.warn('Theme setup skipped:', error);
+    }
   }, []);
 
   return (

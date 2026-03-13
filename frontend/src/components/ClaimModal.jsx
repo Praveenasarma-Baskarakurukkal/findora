@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './ClaimModal.css';
 import NICClaim from './claims/NICClaim';
@@ -7,11 +7,29 @@ import BankCardClaim from './claims/BankCardClaim';
 import PurseClaim from './claims/PurseClaim';
 import OtherItemClaim from './claims/OtherItemClaim';
 import OTPDisplay from './OTPDisplay';
+import { claimsAPI } from '../services/api';
 
 const ClaimModal = ({ isOpen, onClose, item }) => {
   const [currentStep, setCurrentStep] = useState('select'); // select, form, otp
   const [generatedOTP, setGeneratedOTP] = useState('');
   const [claimData, setClaimData] = useState(null);
+  const [claimError, setClaimError] = useState('');
+  const [claimLoading, setClaimLoading] = useState(false);
+
+  const submitClaim = async (userData) => {
+    setClaimError('');
+    setClaimLoading(true);
+    try {
+      const response = await claimsAPI.create(item.id);
+      setClaimData(userData);
+      setGeneratedOTP(response.data.otp);
+      setCurrentStep('otp');
+    } catch (error) {
+      setClaimError(error.response?.data?.message || 'Failed to submit claim. Please try again.');
+    } finally {
+      setClaimLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -32,11 +50,7 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
         return (
           <NICClaim
             item={item}
-            onSubmit={(userData) => {
-              setClaimData(userData);
-              setGeneratedOTP(generateOTP());
-              setCurrentStep('otp');
-            }}
+            onSubmit={submitClaim}
             onCancel={() => setCurrentStep('select')}
           />
         );
@@ -46,11 +60,7 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
           <IDClaim
             item={item}
             idType={item.category}
-            onSubmit={(userData) => {
-              setClaimData(userData);
-              setGeneratedOTP(generateOTP());
-              setCurrentStep('otp');
-            }}
+            onSubmit={submitClaim}
             onCancel={() => setCurrentStep('select')}
           />
         );
@@ -59,11 +69,7 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
         return (
           <BankCardClaim
             item={item}
-            onSubmit={(userData) => {
-              setClaimData(userData);
-              setGeneratedOTP(generateOTP());
-              setCurrentStep('otp');
-            }}
+            onSubmit={submitClaim}
             onCancel={() => setCurrentStep('select')}
           />
         );
@@ -73,11 +79,7 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
         return (
           <PurseClaim
             item={item}
-            onSubmit={(userData) => {
-              setClaimData(userData);
-              setGeneratedOTP(generateOTP());
-              setCurrentStep('otp');
-            }}
+            onSubmit={submitClaim}
             onCancel={() => setCurrentStep('select')}
           />
         );
@@ -85,19 +87,11 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
         return (
           <OtherItemClaim
             item={item}
-            onSubmit={(userData) => {
-              setClaimData(userData);
-              setGeneratedOTP(generateOTP());
-              setCurrentStep('otp');
-            }}
+            onSubmit={submitClaim}
             onCancel={() => setCurrentStep('select')}
           />
         );
     }
-  };
-
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
   };
 
   const modalContent = (
@@ -124,7 +118,16 @@ const ClaimModal = ({ isOpen, onClose, item }) => {
             </div>
           )}
 
-          {currentStep === 'form' && getCategoryComponent()}
+          {currentStep === 'form' && (
+            <>
+              {claimError && (
+                <p style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{claimError}</p>
+              )}
+              {claimLoading ? (
+                <p style={{ textAlign: 'center', padding: '2rem' }}>Submitting claim...</p>
+              ) : getCategoryComponent()}
+            </>
+          )}
 
           {currentStep === 'otp' && (
             <OTPDisplay
