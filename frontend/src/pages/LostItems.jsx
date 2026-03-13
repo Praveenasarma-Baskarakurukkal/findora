@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { itemsAPI } from '../services/api';
 import ItemCard from '../components/ItemCard';
 import Pagination from '../components/Pagination';
+import { sampleLostItems } from '../data/sampleLostItems';
 
 const PAGE_SIZE = 4;
 
@@ -37,19 +38,20 @@ const LostItems = () => {
         keyword: filters.search || undefined
       });
 
-      setItems(response.data?.content || []);
+      const apiItems = response.data?.content || [];
+      setItems(apiItems.length > 0 ? apiItems : sampleLostItems);
       setPagination({
         totalPages: response.data?.totalPages ?? 0,
-        totalElements: response.data?.totalElements ?? 0,
+        totalElements: response.data?.totalElements ?? (apiItems.length > 0 ? apiItems.length : sampleLostItems.length),
         pageNumber: response.data?.pageNumber ?? currentPage,
         pageSize: response.data?.pageSize ?? PAGE_SIZE
       });
     } catch (error) {
       console.error('Error loading items:', error);
-      setItems([]);
+      setItems(sampleLostItems);
       setPagination({
-        totalPages: 0,
-        totalElements: 0,
+        totalPages: 1,
+        totalElements: sampleLostItems.length,
         pageNumber: 0,
         pageSize: PAGE_SIZE
       });

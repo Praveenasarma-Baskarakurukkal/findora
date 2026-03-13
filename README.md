@@ -172,6 +172,18 @@ Important values to review:
 - `spring.mail.password=...`
 - `app.upload.dir=uploads/`
 
+Demo users are no longer hardcoded in source. To seed local demo accounts, enable seeding and provide passwords through environment variables:
+
+```bash
+APP_SEED_USERS_ENABLED=true
+APP_SEED_ADMIN_PASSWORD=change-me
+APP_SEED_SECURITY_PASSWORD=change-me
+APP_SEED_STUDENT_PASSWORD=change-me
+APP_SEED_STAFF_PASSWORD=change-me
+```
+
+If those variables are not set, no demo accounts are created on startup.
+
 ### 4. Build the backend
 
 ```bash

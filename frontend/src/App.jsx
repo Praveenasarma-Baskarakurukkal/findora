@@ -88,7 +88,14 @@ function App() {
                           <Route path="/admin/transactions" element={<PrivateRoute roles={['admin']}><AdminTransactions /></PrivateRoute>} />
             </Routes>
           </Suspense>
-          <ToastContainer position="top-right" autoClose={3000} />
+          <ToastContainer
+            position="top-center"
+            autoClose={3000}
+            newestOnTop
+            closeOnClick
+            draggable
+            className="app-toast-container"
+          />
         </div>
       </AuthProvider>
     </Router>

@@ -3,6 +3,9 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { toast } from 'react-toastify';
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
 const ResetPassword = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -12,39 +15,62 @@ const ResetPassword = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    setErrors((prev) => ({ ...prev, [name]: '', general: '' }));
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+    const email = formData.email.trim();
+
+    if (!emailPattern.test(email)) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+
+    if (!/^\d{6}$/.test(formData.otp)) {
+      nextErrors.otp = 'OTP must contain exactly 6 digits.';
+    }
+
+    if (!strongPasswordPattern.test(formData.newPassword)) {
+      nextErrors.newPassword = 'Use 8+ chars with upper, lower, number, and symbol.';
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      nextErrors.confirmPassword = 'Passwords do not match.';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!validate()) {
       return;
     }
 
     setLoading(true);
     try {
       const response = await authAPI.resetPassword({
-        email: formData.email,
+        email: formData.email.trim(),
         otp: formData.otp,
         newPassword: formData.newPassword
       });
       toast.success(response.data.message || 'Password reset successful');
       navigate('/login');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reset password');
+      const message = error.response?.data?.message || 'Failed to reset password';
+      setErrors((prev) => ({ ...prev, general: message }));
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -54,11 +80,13 @@ const ResetPassword = () => {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Reset Password</h2>
-        <p style={{ color: '#6B7280', marginBottom: '1.5rem' }}>
+        <p className="auth-subtitle">
           Enter the OTP sent to your email and create a new password.
         </p>
 
         <form onSubmit={handleSubmit}>
+          {errors.general && <div className="form-error-banner">{errors.general}</div>}
+
           <div className="form-group">
             <label>Email Address</label>
             <input
@@ -67,8 +95,10 @@ const ResetPassword = () => {
               placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
+              className={errors.email ? 'input-error' : ''}
               required
             />
+            {errors.email && <p className="field-error">{errors.email}</p>}
           </div>
 
           <div className="form-group">
@@ -78,19 +108,18 @@ const ResetPassword = () => {
               name="otp"
               placeholder="Enter 6-digit OTP"
               value={formData.otp}
-              onChange={(e) => setFormData({
-                ...formData,
-                otp: e.target.value.replace(/\D/g, '').slice(0, 6)
-              })}
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  otp: e.target.value.replace(/\D/g, '').slice(0, 6)
+                });
+                setErrors((prev) => ({ ...prev, otp: '', general: '' }));
+              }}
               maxLength={6}
               required
-              style={{ 
-                textAlign: 'center', 
-                fontSize: '1.2rem', 
-                letterSpacing: '0.3rem',
-                fontWeight: 'bold'
-              }}
+              className={`otp-input ${errors.otp ? 'input-error' : ''}`}
             />
+            {errors.otp && <p className="field-error">{errors.otp}</p>}
           </div>
 
           <div className="form-group">
@@ -101,8 +130,10 @@ const ResetPassword = () => {
               placeholder="Enter new password"
               value={formData.newPassword}
               onChange={handleChange}
+              className={errors.newPassword ? 'input-error' : ''}
               required
             />
+            {errors.newPassword && <p className="field-error">{errors.newPassword}</p>}
           </div>
 
           <div className="form-group">
@@ -113,14 +144,15 @@ const ResetPassword = () => {
               placeholder="Confirm new password"
               value={formData.confirmPassword}
               onChange={handleChange}
+              className={errors.confirmPassword ? 'input-error' : ''}
               required
             />
+            {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
           </div>
 
           <button 
             type="submit" 
-            className="btn-primary" 
-            style={{ width: '100%', marginBottom: '1rem' }}
+            className="btn-primary auth-submit-btn"
             disabled={loading}
           >
             {loading ? 'Resetting...' : 'Reset Password'}
@@ -128,8 +160,8 @@ const ResetPassword = () => {
         </form>
 
         <div className="auth-links">
-          <Link to="/login">Back to Login</Link>
-          <Link to="/forgot-password">Resend OTP</Link>
+          <Link to="/login" className="auth-link-btn">Back to Login</Link>
+          <Link to="/forgot-password" className="auth-link-btn">Resend OTP</Link>
         </div>
       </div>
     </div>
