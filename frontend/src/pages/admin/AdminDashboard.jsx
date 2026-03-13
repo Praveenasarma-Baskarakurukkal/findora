@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import MobileWarning from '../../components/MobileWarning';
 
@@ -88,22 +89,22 @@ const AdminDashboard = () => {
       <div className="admin-quick-links">
         <h2>Quick Actions</h2>
         <div className="link-grid">
-          <a href="/admin/users" className="quick-link-card">
+          <Link to="/admin/users" className="quick-link-card">
             <h3>Manage Users</h3>
             <p>View and manage all users</p>
-          </a>
-          <a href="/admin/items" className="quick-link-card">
+          </Link>
+          <Link to="/admin/items" className="quick-link-card">
             <h3>Manage Items</h3>
             <p>View all lost and found items</p>
-          </a>
-          <a href="/admin/reports" className="quick-link-card">
+          </Link>
+          <Link to="/admin/reports" className="quick-link-card">
             <h3>Handle Reports</h3>
             <p>Review and resolve reports</p>
-          </a>
-          <a href="/admin/transactions" className="quick-link-card">
+          </Link>
+          <Link to="/admin/transactions" className="quick-link-card">
             <h3>View Transactions</h3>
             <p>All security transactions</p>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

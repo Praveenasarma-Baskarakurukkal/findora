@@ -242,8 +242,27 @@ public class ItemController {
     public ResponseEntity<?> updateItemStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> statusUpdate) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-            .body(Map.of("message", "TODO: Implement status update"));
+        try {
+            if (itemService.getItemById(id).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "Item not found"));
+            }
+            String statusStr = statusUpdate.get("status");
+            if (statusStr == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Status is required"));
+            }
+            ItemStatus newStatus = ItemStatus.valueOf(statusStr.toUpperCase());
+            itemService.updateItemStatus(id, newStatus);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Status updated"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("success", false, "message", "Invalid status value"));
+        } catch (Exception e) {
+            log.error("Error updating item status", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Server error"));
+        }
     }
 
     /**
@@ -252,8 +271,18 @@ public class ItemController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteItem(@PathVariable Long id) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-            .body(Map.of("message", "TODO: Implement item deletion"));
+        try {
+            if (itemService.getItemById(id).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "Item not found"));
+            }
+            itemService.deleteItem(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Item deleted"));
+        } catch (Exception e) {
+            log.error("Error deleting item {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Server error"));
+        }
     }
 
     /**

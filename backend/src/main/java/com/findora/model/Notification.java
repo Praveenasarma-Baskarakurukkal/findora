@@ -63,4 +63,23 @@ public class Notification {
     public enum NotificationType {
         MATCH, OTP, APPROVAL, REPORT, CLAIM, SYSTEM
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public NotificationType getType() { return type; }
+    public void setType(NotificationType type) { this.type = type; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public Boolean getIsRead() { return isRead; }
+    public void setIsRead(Boolean isRead) { this.isRead = isRead; }
+    public Long getRelatedId() { return relatedId; }
+    public void setRelatedId(Long relatedId) { this.relatedId = relatedId; }
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

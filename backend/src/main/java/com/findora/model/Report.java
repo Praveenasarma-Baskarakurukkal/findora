@@ -66,4 +66,25 @@ public class Report {
     public enum ReportStatus {
         PENDING, REVIEWED, RESOLVED
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getReporterId() { return reporterId; }
+    public void setReporterId(Long reporterId) { this.reporterId = reporterId; }
+    public User getReporter() { return reporter; }
+    public void setReporter(User reporter) { this.reporter = reporter; }
+    public Long getItemId() { return itemId; }
+    public void setItemId(Long itemId) { this.itemId = itemId; }
+    public Item getItem() { return item; }
+    public void setItem(Item item) { this.item = item; }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+    public ReportStatus getStatus() { return status; }
+    public void setStatus(ReportStatus status) { this.status = status; }
+    public String getAdminNotes() { return adminNotes; }
+    public void setAdminNotes(String adminNotes) { this.adminNotes = adminNotes; }
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public java.time.LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(java.time.LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 }

@@ -28,6 +28,9 @@ const MyClaims = lazy(() => import('./pages/MyClaims'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminItems = lazy(() => import('./pages/admin/AdminItems'));
+const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions'));
 
 const SecurityPendingClaims = lazy(() => import('./pages/security/SecurityPendingClaims'));
 
@@ -80,6 +83,9 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={<PrivateRoute roles={['admin']}><AdminDashboard /></PrivateRoute>} />
               <Route path="/admin/users" element={<PrivateRoute roles={['admin']}><AdminUsers /></PrivateRoute>} />
+                          <Route path="/admin/reports" element={<PrivateRoute roles={['admin']}><AdminReports /></PrivateRoute>} />
+                          <Route path="/admin/items" element={<PrivateRoute roles={['admin']}><AdminItems /></PrivateRoute>} />
+                          <Route path="/admin/transactions" element={<PrivateRoute roles={['admin']}><AdminTransactions /></PrivateRoute>} />
             </Routes>
           </Suspense>
           <ToastContainer position="top-right" autoClose={3000} />
