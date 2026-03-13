@@ -54,16 +54,41 @@ const Notifications = () => {
     }
   };
 
+  const getNotificationMeta = (type) => {
+    if (type === 'match') return { icon: '🎯', label: 'Match' };
+    if (type === 'reminder') return { icon: '⏰', label: 'Reminder' };
+    return { icon: '🔔', label: 'System' };
+  };
+
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="container page-shell notifications-page">
+        <div className="page-header">
+          <div className="page-title-group">
+            <h1>Notifications</h1>
+            <p className="page-subtitle">Stay updated on matches, claim status, and account events.</p>
+          </div>
+        </div>
+        <div className="skeleton-grid">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container notifications-page">
-      <div className="notifications-header">
-        <h1>Notifications</h1>
+    <div className="container page-shell notifications-page">
+      <div className="page-header notifications-header">
+        <div className="page-title-group">
+          <h1>Notifications</h1>
+          <p className="page-subtitle">Stay updated on matches, claim status, and account events.</p>
+        </div>
         {notifications.some(n => !n.is_read) && (
-          <button onClick={markAllAsRead} className="btn-secondary">Mark All as Read</button>
+          <div className="page-actions">
+            <button onClick={markAllAsRead} className="btn-secondary page-action-btn">Mark All as Read</button>
+          </div>
         )}
       </div>
 
@@ -71,10 +96,15 @@ const Notifications = () => {
         <p className="notifications-empty">No notifications.</p>
       ) : (
         <div className="notifications-list">
-          {notifications.map(notification => (
+          {notifications.map(notification => {
+            const meta = getNotificationMeta(notification.type);
+            return (
             <div key={notification.id} className={`notification-card ${notification.is_read ? 'read' : 'unread'}`}>
               <div className="notification-content">
-                <span className={`notification-type ${notification.type}`}>{notification.type}</span>
+                <span className={`notification-type notification-type-${notification.type}`}>
+                  <span className="notification-type-icon" aria-hidden="true">{meta.icon}</span>
+                  {meta.label}
+                </span>
                 <h3 className="notification-title">{notification.title}</h3>
                 <p className="notification-message">{notification.message}</p>
                 <small className="notification-time">{new Date(notification.created_at).toLocaleString()}</small>
@@ -99,7 +129,7 @@ const Notifications = () => {
                 <button onClick={() => deleteNotification(notification.id)} className="btn-link delete">Delete</button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

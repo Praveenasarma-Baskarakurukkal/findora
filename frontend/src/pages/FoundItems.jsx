@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import FoundItemCard from '../components/FoundItemCard';
 import Pagination from '../components/Pagination';
@@ -141,14 +141,36 @@ const FoundItems = () => {
   }, [searchParams, displayedItems]);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="container page-shell">
+        <div className="page-header">
+          <div className="page-title-group">
+            <h1>Found Items</h1>
+            <p className="page-subtitle">Browse recently found items and quickly claim matches.</p>
+          </div>
+        </div>
+        <div className="skeleton-grid">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container">
-      <h1>Found Items</h1>
+    <div className="container page-shell">
+      <div className="page-header">
+        <div className="page-title-group">
+          <h1>Found Items</h1>
+          <p className="page-subtitle">Browse recently found items and quickly claim matches.</p>
+        </div>
+        <div className="page-actions">
+          <Link to="/report-found" className="btn-primary page-action-btn">+ Report Found Item</Link>
+        </div>
+      </div>
 
-      <div className="filters">
+      <div className="filters filter-bar">
         <select name="category" value={filters.category} onChange={handleFilterChange}>
           <option value="">All Categories</option>
           <option value="NIC">NIC</option>
@@ -177,7 +199,12 @@ const FoundItems = () => {
 
       <div className="items-grid">
         {displayedItems.length === 0 ? (
-          <p>No found items available.</p>
+          <div className="empty-panel">
+            <div className="empty-panel-icon">📦</div>
+            <h3>No Found Items Yet</h3>
+            <p>No found items are available right now.</p>
+            <Link to="/report-found" className="empty-panel-action">Report a Found Item</Link>
+          </div>
         ) : (
           displayedItems.map((item) => (
             <FoundItemCard

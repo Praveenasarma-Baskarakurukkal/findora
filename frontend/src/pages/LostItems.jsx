@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import ItemCard from '../components/ItemCard';
 import Pagination from '../components/Pagination';
@@ -81,14 +82,36 @@ const LostItems = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="container page-shell">
+        <div className="page-header">
+          <div className="page-title-group">
+            <h1>My Lost Items</h1>
+            <p className="page-subtitle">Track and manage the items you reported as lost.</p>
+          </div>
+        </div>
+        <div className="skeleton-grid">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container">
-      <h1>My Lost Items</h1>
+    <div className="container page-shell">
+      <div className="page-header">
+        <div className="page-title-group">
+          <h1>My Lost Items</h1>
+          <p className="page-subtitle">Track and manage the items you reported as lost.</p>
+        </div>
+        <div className="page-actions">
+          <Link to="/report-lost" className="btn-primary page-action-btn">+ Report Lost Item</Link>
+        </div>
+      </div>
 
-      <div className="filters">
+      <div className="filters filter-bar">
         <select name="category" value={filters.category} onChange={handleFilterChange}>
           <option value="">All Categories</option>
           <option value="NIC">NIC</option>
@@ -111,7 +134,12 @@ const LostItems = () => {
 
       <div className="items-grid">
         {items.length === 0 ? (
-          <p>You have not posted any lost items yet.</p>
+          <div className="empty-panel">
+            <div className="empty-panel-icon">🧾</div>
+            <h3>No Lost Items Yet</h3>
+            <p>You have not posted any lost items yet.</p>
+            <Link to="/report-lost" className="empty-panel-action">Report Your First Lost Item</Link>
+          </div>
         ) : (
           items.map(item => <ItemCard key={item.id} item={item} />)
         )}

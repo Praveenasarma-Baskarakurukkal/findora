@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { claimsAPI } from '../services/api';
 import './MyClaims.css';
 import { sampleClaims } from '../data/sampleClaims';
@@ -28,15 +29,41 @@ const MyClaims = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="container page-shell my-claims-page">
+        <div className="page-header">
+          <div className="page-title-group">
+            <h1>My Claims</h1>
+            <p className="page-subtitle">Track claim approvals, OTP details, and item collection status.</p>
+          </div>
+        </div>
+        <div className="skeleton-grid">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container my-claims-page">
-      <h1>My Claims</h1>
+    <div className="container page-shell my-claims-page">
+      <div className="page-header">
+        <div className="page-title-group">
+          <h1>My Claims</h1>
+          <p className="page-subtitle">Track claim approvals, OTP details, and item collection status.</p>
+        </div>
+        <div className="page-actions">
+          <Link to="/found-items" className="btn-secondary page-action-btn">Browse Found Items</Link>
+        </div>
+      </div>
 
       {claims.length === 0 ? (
-        <p className="claims-empty">You haven't made any claims yet.</p>
+        <div className="empty-panel claims-empty">
+          <div className="empty-panel-icon">🏷️</div>
+          <h3>No Claims Yet</h3>
+          <p>You have not made any claims yet.</p>
+          <Link to="/found-items" className="empty-panel-action">Find Items to Claim</Link>
+        </div>
       ) : (
         <div className="claims-list">
           {claims.map(claim => (
