@@ -78,17 +78,19 @@ const Dashboard = () => {
     <div className="container">
       <div className="dashboard">
         <div className="dashboard-top">
-          <div>
+          <div className="dashboard-title-block">
             <h1>Welcome, {user?.full_name}!</h1>
             <p className="role-badge">Role: {user?.role}</p>
           </div>
           {(user?.role === 'student' || user?.role === 'staff') && (
-            <button 
-              onClick={() => setIsPostModalOpen(true)} 
-              className="btn-primary btn-posts"
-            >
-              ➕ Posts
-            </button>
+            <div className="dashboard-top-actions">
+              <button
+                onClick={() => setIsPostModalOpen(true)}
+                className="btn-primary btn-posts"
+              >
+                + Create Post
+              </button>
+            </div>
           )}
         </div>
 

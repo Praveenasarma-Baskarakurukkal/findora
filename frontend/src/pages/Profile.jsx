@@ -176,14 +176,16 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="profile-card" style={{ marginTop: '1rem' }}>
-          <h2 style={{ marginBottom: '0.75rem' }}>Security</h2>
-          <p style={{ marginBottom: '1rem', color: '#6B7280' }}>
-            Manage your account security settings.
-          </p>
-          <button type="button" className="btn-primary" onClick={() => setIsPasswordModalOpen(true)}>
-            Change Password
-          </button>
+        <div className="profile-card profile-security-card">
+          <div className="profile-security-header">
+            <div>
+              <h2>Security</h2>
+              <p className="profile-security-text">Manage your account security settings.</p>
+            </div>
+            <button type="button" className="btn-primary profile-security-btn" onClick={() => setIsPasswordModalOpen(true)}>
+              Change Password
+            </button>
+          </div>
         </div>
 
         {isPasswordModalOpen && (
@@ -240,7 +242,7 @@ const Profile = () => {
                   {errors.confirmPassword && <small style={{ color: '#DC2626' }}>{errors.confirmPassword}</small>}
                 </div>
 
-                <div className="form-actions" style={{ marginTop: '0.5rem', justifyContent: 'flex-end' }}>
+                <div className="form-actions profile-password-actions">
                   <button type="button" className="btn-secondary" onClick={closePasswordModal} disabled={loading}>
                     Cancel
                   </button>

@@ -15,6 +15,7 @@ const FoundItems = () => {
   const [searchParams] = useSearchParams();
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [pagination, setPagination] = useState({
     totalPages: 0,
     totalElements: 0,
@@ -27,6 +28,7 @@ const FoundItems = () => {
     search: '',
     sortBy: FOUND_ITEM_SORT.LATEST
   });
+  const [searchInput, setSearchInput] = useState('');
 
   const normalizeItem = (item) => ({
     id: item.id,
@@ -60,9 +62,20 @@ const FoundItems = () => {
     loadItems();
   }, [location.state?.refreshAt, currentPage, filters.category, filters.search, sortParam]);
 
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      setCurrentPage(0);
+      setFilters((prev) => ({ ...prev, search: searchInput }));
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchInput]);
+
   const loadItems = async () => {
     try {
-      setLoading(true);
+      if (!loading) {
+        setIsFetching(true);
+      }
 
       const response = await itemsAPI.getAll({
         type: 'found',
@@ -99,13 +112,15 @@ const FoundItems = () => {
       });
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
   const displayedItems = allItems;
 
   const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(0);
   };
 
@@ -147,8 +162,8 @@ const FoundItems = () => {
           type="text"
           name="search"
           placeholder="Search items..."
-          value={filters.search}
-          onChange={handleFilterChange}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
         />
 
         <select name="sortBy" value={filters.sortBy} onChange={handleFilterChange}>
@@ -157,6 +172,8 @@ const FoundItems = () => {
           <option value={FOUND_ITEM_SORT.NAME_DESC}>Alphabetical Z {'->'} A</option>
         </select>
       </div>
+
+      {isFetching && <p className="list-refreshing">Refreshing results...</p>}
 
       <div className="items-grid">
         {displayedItems.length === 0 ? (

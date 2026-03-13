@@ -9,6 +9,7 @@ const PAGE_SIZE = 4;
 const LostItems = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [pagination, setPagination] = useState({
     totalPages: 0,
     totalElements: 0,
@@ -20,14 +21,26 @@ const LostItems = () => {
     category: '',
     search: ''
   });
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     loadItems();
   }, [currentPage, filters.category, filters.search]);
 
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      setCurrentPage(0);
+      setFilters((prev) => ({ ...prev, search: searchInput }));
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchInput]);
+
   const loadItems = async () => {
     try {
-      setLoading(true);
+      if (!loading) {
+        setIsFetching(true);
+      }
 
       const response = await itemsAPI.getMy({
         type: 'lost',
@@ -57,11 +70,13 @@ const LostItems = () => {
       });
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
   const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(0);
   };
 
@@ -87,10 +102,12 @@ const LostItems = () => {
           type="text"
           name="search"
           placeholder="Search items..."
-          value={filters.search}
-          onChange={handleFilterChange}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
         />
       </div>
+
+      {isFetching && <p className="list-refreshing">Refreshing results...</p>}
 
       <div className="items-grid">
         {items.length === 0 ? (

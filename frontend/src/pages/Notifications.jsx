@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { notificationsAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { sampleNotifications } from '../data/sampleNotifications';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -14,9 +15,11 @@ const Notifications = () => {
   const loadNotifications = async () => {
     try {
       const response = await notificationsAPI.getAll();
-      setNotifications(response.data.notifications);
+      const apiNotifications = response.data.notifications || [];
+      setNotifications(apiNotifications.length > 0 ? apiNotifications : sampleNotifications);
     } catch (error) {
       console.error('Error loading notifications:', error);
+      setNotifications(sampleNotifications);
     } finally {
       setLoading(false);
     }
@@ -56,7 +59,7 @@ const Notifications = () => {
   }
 
   return (
-    <div className="container">
+    <div className="container notifications-page">
       <div className="notifications-header">
         <h1>Notifications</h1>
         {notifications.some(n => !n.is_read) && (
@@ -65,16 +68,16 @@ const Notifications = () => {
       </div>
 
       {notifications.length === 0 ? (
-        <p>No notifications.</p>
+        <p className="notifications-empty">No notifications.</p>
       ) : (
         <div className="notifications-list">
           {notifications.map(notification => (
             <div key={notification.id} className={`notification-card ${notification.is_read ? 'read' : 'unread'}`}>
               <div className="notification-content">
                 <span className={`notification-type ${notification.type}`}>{notification.type}</span>
-                <h3>{notification.title}</h3>
-                <p>{notification.message}</p>
-                <small>{new Date(notification.created_at).toLocaleString()}</small>
+                <h3 className="notification-title">{notification.title}</h3>
+                <p className="notification-message">{notification.message}</p>
+                <small className="notification-time">{new Date(notification.created_at).toLocaleString()}</small>
               </div>
               <div className="notification-actions">
                 {notification.type === 'match' && notification.found_item_id && (

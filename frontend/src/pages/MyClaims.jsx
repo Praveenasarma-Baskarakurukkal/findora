@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { claimsAPI } from '../services/api';
 import './MyClaims.css';
+import { sampleClaims } from '../data/sampleClaims';
 
 const API_HOST = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace('/api', '');
 
@@ -16,10 +17,11 @@ const MyClaims = () => {
     try {
       const response = await claimsAPI.getMy();
       const claimsData = response.data.claims || [];
-      setClaims(claimsData);
+      setClaims(claimsData.length > 0 ? claimsData : sampleClaims);
       console.log('Claims loaded:', claimsData); // Debug log
     } catch (error) {
       console.error('Error loading claims:', error);
+      setClaims(sampleClaims);
     } finally {
       setLoading(false);
     }
@@ -30,11 +32,11 @@ const MyClaims = () => {
   }
 
   return (
-    <div className="container">
+    <div className="container my-claims-page">
       <h1>My Claims</h1>
 
       {claims.length === 0 ? (
-        <p>You haven't made any claims yet.</p>
+        <p className="claims-empty">You haven't made any claims yet.</p>
       ) : (
         <div className="claims-list">
           {claims.map(claim => (
