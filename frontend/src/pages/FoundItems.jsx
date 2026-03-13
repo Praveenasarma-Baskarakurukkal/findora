@@ -7,6 +7,7 @@ import { normalizeCategory } from '../utils/categoryUtils';
 import { FOUND_ITEM_SORT } from '../utils/itemDisplayUtils';
 
 const PAGE_SIZE = 4;
+const API_HOST = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace('/api', '');
 
 const FoundItems = () => {
   const location = useLocation();
@@ -32,7 +33,7 @@ const FoundItems = () => {
     description: item.description || '',
     location: item.location || 'Unknown location',
     date_found: item.date_found || item.date || item.created_at,
-    image: item.image || (item.image_url ? `http://localhost:5000${item.image_url}` : 'https://via.placeholder.com/300x200?text=Item+Image'),
+    image: item.image || (item.image_url ? `${API_HOST}${item.image_url}` : 'https://via.placeholder.com/300x200?text=Item+Image'),
     category: normalizeCategory(item.category, item.name || item.item_name),
     type: item.type || 'found',
     status: item.status || 'active',

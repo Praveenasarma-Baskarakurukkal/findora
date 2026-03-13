@@ -7,6 +7,8 @@ import FoundItemCard from '../components/FoundItemCard';
 import { normalizeCategory } from '../utils/categoryUtils';
 import { FOUND_ITEM_SORT, sortFoundItems } from '../utils/itemDisplayUtils';
 
+const API_HOST = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace('/api', '');
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ const Dashboard = () => {
             ...item,
             name: item.name || item.item_name,
             date_found: item.date_found || item.date || item.created_at,
-            image: item.image || (item.image_url ? `http://localhost:5000${item.image_url}` : 'https://via.placeholder.com/300x200?text=Item+Image'),
+            image: item.image || (item.image_url ? `${API_HOST}${item.image_url}` : 'https://via.placeholder.com/300x200?text=Item+Image'),
             category: normalizeCategory(item.category, item.name || item.item_name),
             posted_by: item.posted_by || {
               id: item.user_id,
