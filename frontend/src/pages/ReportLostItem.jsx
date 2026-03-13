@@ -103,8 +103,6 @@ const ReportLostItem = () => {
     purseWithIdToTime: ''
   });
 
-  const navigate = useNavigate();
-
   const handleCategoryChange = (e) => {
     setCategory(e.target.value);
     setErrors({});
@@ -271,82 +269,6 @@ const ReportLostItem = () => {
     } catch (error) {
       console.error('Failed to create lost item:', error.response?.data || error.message);
       toast.error(error.response?.data?.message || 'Failed to report lost item');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    const categoryMap = {
-      'NIC': 'NIC',
-      'Student / Staff ID': 'Student ID',
-      'Bank Card': 'Bank Card',
-      'Purse / Wallet': 'Wallet',
-      'Others': 'Other'
-    };
-
-    let item_name, description, location, date, time, image;
-
-    if (category === 'NIC') {
-      item_name = `NIC - ${formData.nicName}`;
-      description = `NIC Number: ${formData.nicNumber}`;
-      location = [formData.nicLocation1, formData.nicLocation2].filter(Boolean).join(', ');
-      date = formData.nicDateLost;
-      time = formData.nicFromTime;
-      image = null;
-    } else if (category === 'Student / Staff ID') {
-      item_name = `Student/Staff ID - ${formData.idName}`;
-      description = `ID: ${formData.studentOrStaffId}`;
-      location = [formData.idLocation1, formData.idLocation2].filter(Boolean).join(', ');
-      date = formData.idDateLost;
-      time = formData.idFromTime;
-      image = null;
-    } else if (category === 'Bank Card') {
-      item_name = `${formData.cardType} Card - ${formData.bankName}`;
-      description = formData.cardLast4 ? `Last 4 digits: ${formData.cardLast4}` : '';
-      location = [formData.bankLocation1, formData.bankLocation2, formData.bankLocation3].filter(Boolean).join(', ');
-      date = formData.bankDateLost;
-      time = formData.bankFromTime;
-      image = null;
-    } else if (category === 'Purse / Wallet') {
-      item_name = 'Purse / Wallet';
-      if (purseOption === 'with-id') {
-        description = `Contains ID/NIC: ${formData.purseIdNumber}`;
-        location = [formData.purseWithIdLocation1, formData.purseWithIdLocation2].filter(Boolean).join(', ');
-        date = formData.purseWithIdDateLost;
-        time = formData.purseWithIdFromTime;
-      } else {
-        const items = [formData.purseItems1, formData.purseItems2, formData.purseItems3].filter(Boolean).join(', ');
-        description = items ? `Contains: ${items}` : '';
-        location = [formData.purseLocation1, formData.purseLocation2, formData.purseLocation3].filter(Boolean).join(', ');
-        date = formData.purseDateLost;
-        time = formData.purseFromTime;
-      }
-      image = formData.pursePhoto;
-    } else {
-      item_name = 'Other Item';
-      description = '';
-      location = [formData.otherLocation1, formData.otherLocation2, formData.otherLocation3].filter(Boolean).join(', ');
-      date = formData.otherDateLost;
-      time = formData.otherFromTime;
-      image = formData.otherPhoto;
-    }
-
-    setLoading(true);
-    try {
-      await itemsAPI.create({
-        type: 'lost',
-        category: categoryMap[category],
-        item_name,
-        description,
-        location,
-        date,
-        time,
-        image
-      });
-      toast.success('Lost item reported successfully!');
-      navigate('/lost-items');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to submit. Please try again.');
     } finally {
       setLoading(false);
     }
